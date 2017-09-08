@@ -84,15 +84,18 @@ static CGFloat const ATLChevronIconViewRightPadding = 14.0f;
 + (void)initialize
 {
     // UIAppearance Proxy Defaults
-    ATLConversationTableViewCell *proxy = [self appearance];
-    proxy.conversationTitleLabelFont = [UIFont boldSystemFontOfSize:17];
-    proxy.conversationTitleLabelColor = [UIColor blackColor];
-    proxy.lastMessageLabelFont = [UIFont systemFontOfSize:15];
-    proxy.lastMessageLabelColor = [UIColor grayColor];
-    proxy.dateLabelFont = [UIFont systemFontOfSize:15];
-    proxy.dateLabelColor = [UIColor grayColor];
-    proxy.unreadMessageIndicatorBackgroundColor = ATLBlueColor();
-    proxy.cellBackgroundColor = [UIColor whiteColor];
+  ATLConversationTableViewCell *proxy = [self appearance];
+  proxy.conversationTitleLabelFont = [UIFont fontWithName:@"ProximaNova-Regular" size:17];
+  proxy.conversationTitleLabelColor =  [UIColor colorWithRed:0.17 green:0.18 blue:0.18 alpha:1];
+  
+  proxy.lastMessageLabelFont =  [UIFont fontWithName:@"ProximaNova-Regular" size:15];
+  proxy.lastMessageLabelColor = [UIColor colorWithRed:0.38 green:0.39 blue:0.4 alpha:1];
+  
+  proxy.dateLabelFont =  [UIFont fontWithName:@"ProximaNova-Regular" size:12];
+  proxy.dateLabelColor = [UIColor lightGrayColor];
+  
+  proxy.unreadMessageIndicatorBackgroundColor = ATLBlueColor();
+  proxy.cellBackgroundColor = [UIColor whiteColor];
 }
 
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
