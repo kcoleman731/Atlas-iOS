@@ -64,6 +64,7 @@ static NSDateFormatter *ATLShortTimeFormatter()
 @property (nonatomic) NSLayoutConstraint *conversationTitleLabelWithoutImageLeftConstraint;
 
 @property (nonatomic) ATLAvatarImageView *conversationImageView;
+@property (nonatomic) UILabel *conversationRecepientName;
 @property (nonatomic) UILabel *conversationTitleLabel;
 @property (nonatomic) UILabel *dateLabel;
 @property (nonatomic) UILabel *lastMessageLabel;
