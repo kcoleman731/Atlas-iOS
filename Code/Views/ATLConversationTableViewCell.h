@@ -28,6 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface ATLConversationTableViewCell : UITableViewCell <ATLConversationPresenting>
 
+
 /**
  @abstract The font for the conversation label displayed in the cell. Default is 14pt system font.
  */
