@@ -21,14 +21,11 @@
 #import "ATLConversationTableViewCell.h"
 #import "ATLConstants.h"
 #import "ATLMessagingUtilities.h"
-#import "ATLAvatarImageView.h"
+#import "ATLAvatarView.h"
 
 static BOOL ATLIsDateInToday(NSDate *date)
 {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    NSCalendarUnit dateUnits = NSEraCalendarUnit | NSYearCalendarUnit | NSMonthCalendarUnit | NSDayCalendarUnit;
-#pragma GCC diagnostic pop    
+    NSCalendarUnit dateUnits = NSCalendarUnitEra | NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay;
     NSDateComponents *dateComponents = [[NSCalendar currentCalendar] components:dateUnits fromDate:date];
     NSDateComponents *todayComponents = [[NSCalendar currentCalendar] components:dateUnits fromDate:[NSDate date]];
     return ([dateComponents day] == [todayComponents day] &&
@@ -63,8 +60,9 @@ static NSDateFormatter *ATLShortTimeFormatter()
 @property (nonatomic) NSLayoutConstraint *conversationTitleLabelWithImageLeftConstraint;
 @property (nonatomic) NSLayoutConstraint *conversationTitleLabelWithoutImageLeftConstraint;
 
-@property (nonatomic) ATLAvatarImageView *conversationImageView;
-@property (nonatomic) UILabel *conversationRecepientName;
+@property (nonatomic) ATLAvatarView *conversationImageView;
+
+@property (nonatomic) UILabel *recepientTitleLabel;
 @property (nonatomic) UILabel *conversationTitleLabel;
 @property (nonatomic) UILabel *dateLabel;
 @property (nonatomic) UILabel *lastMessageLabel;
@@ -84,19 +82,22 @@ static CGFloat const ATLChevronIconViewRightPadding = 14.0f;
 
 + (void)initialize
 {
-    // UIAppearance Proxy Defaults
-  ATLConversationTableViewCell *proxy = [self appearance];
-  proxy.conversationTitleLabelFont = [UIFont fontWithName:@"ProximaNova-Regular" size:17];
-  proxy.conversationTitleLabelColor =  [UIColor colorWithRed:0.17 green:0.18 blue:0.18 alpha:1];
+   ATLConversationTableViewCell *proxy = [self appearance];
   
-  proxy.lastMessageLabelFont =  [UIFont fontWithName:@"ProximaNova-Regular" size:15];
-  proxy.lastMessageLabelColor = [UIColor colorWithRed:0.38 green:0.39 blue:0.4 alpha:1];
+   proxy.recepientTitleLabelFont = [UIFont fontWithName:@"ProximaNova-Bold" size:17];
+   proxy.recepientTitleLabelColor =  [UIColor colorWithRed:0.17 green:0.18 blue:0.18 alpha:1];
   
-  proxy.dateLabelFont =  [UIFont fontWithName:@"ProximaNova-Regular" size:12];
-  proxy.dateLabelColor = [UIColor lightGrayColor];
+   //proxy.conversationTitleLabelFont = [UIFont fontWithName:@"ProximaNova-Bold" size:17];
+   //proxy.conversationTitleLabelColor =  [UIColor colorWithRed:0.17 green:0.18 blue:0.18 alpha:1];
   
-  proxy.unreadMessageIndicatorBackgroundColor = ATLBlueColor();
-  proxy.cellBackgroundColor = [UIColor whiteColor];
+   proxy.lastMessageLabelFont =  [UIFont fontWithName:@"ProximaNova-Regular" size:15];
+   proxy.lastMessageLabelColor = [UIColor lightGrayColor];
+  
+   proxy.dateLabelFont =  [UIFont fontWithName:@"ProximaNova-Regular" size:12];
+   proxy.dateLabelColor = [UIColor lightGrayColor];
+  
+   proxy.unreadMessageIndicatorBackgroundColor = ATLBlueColor();
+   proxy.cellBackgroundColor = [UIColor whiteColor];
 }
 
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
@@ -122,17 +123,25 @@ static CGFloat const ATLChevronIconViewRightPadding = 14.0f;
     self.backgroundColor = _cellBackgroundColor;
     
     // Initialize Avatar Image
-    _conversationImageView = [[ATLAvatarImageView alloc] init];
+    _conversationImageView = [[ATLAvatarView alloc] init];
     _conversationImageView.translatesAutoresizingMaskIntoConstraints = NO;
-    _conversationImageView.layer.masksToBounds = YES;
+    _conversationImageView.imageView.layer.masksToBounds = YES;
     _conversationImageView.hidden = YES;
     [self.contentView addSubview:_conversationImageView];
-    
-    // Initialize Sender Image
+  
+    // Initialize Recepient Name
+    _recepientTitleLabel = [[UILabel alloc] init];
+    _recepientTitleLabel.translatesAutoresizingMaskIntoConstraints = NO;
+    _recepientTitleLabel.font = _recepientTitleLabelFont;
+    _recepientTitleLabel.textColor = _recepientTitleLabelColor;
+    [self.contentView addSubview:_recepientTitleLabel];
+  
+    // Initialize Title Label
     _conversationTitleLabel = [[UILabel alloc] init];
     _conversationTitleLabel.translatesAutoresizingMaskIntoConstraints = NO;
-    _conversationTitleLabel.font = _conversationTitleLabelFont;
-    _conversationTitleLabel.textColor = _conversationTitleLabelColor;
+    //_conversationTitleLabel.font = _conversationTitleLabelFont;
+    //_conversationTitleLabel.textColor = _conversationTitleLabelColor;
+  _conversationTitleLabel.numberOfLines = 2;
     [self.contentView addSubview:_conversationTitleLabel];
     
     // Initialize Message Label
@@ -166,6 +175,7 @@ static CGFloat const ATLChevronIconViewRightPadding = 14.0f;
     [self.contentView addSubview:_chevronIconView];
     
     [self configureConversationImageViewLayoutContraints];
+    [self configurerecepientLabelLayoutContraints];
     [self configureconversationTitleLabelLayoutContraints];
     [self configureDateLabelLayoutContstraints];
     [self configureLastMessageLayoutConstraints];
@@ -212,10 +222,23 @@ static CGFloat const ATLChevronIconViewRightPadding = 14.0f;
 
 #pragma mark - Appearance Setters
 
+
+- (void)setRecepientTitleLabelFont:(UIFont *)recepientTitleLabelFont
+{
+  _recepientTitleLabelFont = recepientTitleLabelFont;
+  self.recepientTitleLabel.font = recepientTitleLabelFont;
+}
+
+- (void)setRecepientTitleLabelColor:(UIColor *)recepientTitleLabelColor
+{
+  _recepientTitleLabelColor = recepientTitleLabelColor;
+  self.recepientTitleLabel.textColor = recepientTitleLabelColor;
+}
+
 - (void)setConversationTitleLabelFont:(UIFont *)conversationTitleLabelFont
 {
-    _conversationTitleLabelFont = conversationTitleLabelFont;
-    self.conversationTitleLabel.font = conversationTitleLabelFont;
+    //_conversationTitleLabelFont = conversationTitleLabelFont;
+    //self.conversationTitleLabel.font = conversationTitleLabelFont;
 }
 
 - (void)setConversationTitleLabelColor:(UIColor *)conversationTitleLabelColor
@@ -281,6 +304,7 @@ static CGFloat const ATLChevronIconViewRightPadding = 14.0f;
     if (self.lastMessageLabelFont) {
         [attributedString addAttribute:NSFontAttributeName value:self.lastMessageLabelFont range:NSMakeRange(0, attributedString.length)];
         [attributedString addAttribute:NSForegroundColorAttributeName value:self.lastMessageLabelColor range:NSMakeRange(0, attributedString.length)];
+      
     }
     [attributedString addAttribute:NSParagraphStyleAttributeName value:paragraphStyle range:NSMakeRange(0, attributedString.length)];
     return attributedString;
@@ -302,10 +326,37 @@ static CGFloat const ATLChevronIconViewRightPadding = 14.0f;
     }
 }
 
+- (void)updateWithRecepientTitle:(NSString *)recepientTitle
+{
+  self.accessibilityLabel = recepientTitle;
+  self.conversationTitleLabel.text = recepientTitle;
+}
+
 - (void)updateWithConversationTitle:(NSString *)conversationTitle
 {
     self.accessibilityLabel = conversationTitle;
-    self.conversationTitleLabel.text = conversationTitle;
+  
+  NSMutableParagraphStyle *paragraphStyle = [[NSMutableParagraphStyle alloc] init];
+  paragraphStyle.lineSpacing = 2;
+  
+  NSArray *array = [conversationTitle componentsSeparatedByString:@"\n"];
+  
+  NSString *recepientName = [array objectAtIndex:0];
+  NSString *adTitle = [array objectAtIndex:1];
+  
+  NSMutableAttributedString *attributedString = [[NSMutableAttributedString alloc] initWithString:conversationTitle];
+  
+  [attributedString addAttribute:NSFontAttributeName value:[UIFont fontWithName:@"ProximaNova-Bold" size:17] range:NSMakeRange(0, recepientName.length)];
+  
+  [attributedString addAttribute:NSForegroundColorAttributeName value:[UIColor colorWithRed:0.17 green:0.18 blue:0.18 alpha:1] range:NSMakeRange(0, recepientName.length)];
+  
+  
+  [attributedString addAttribute:NSFontAttributeName value:[UIFont fontWithName:@"ProximaNova-Regular" size:15] range:NSMakeRange(recepientName.length, adTitle.length+1)];
+  [attributedString addAttribute:NSForegroundColorAttributeName value:[UIColor colorWithRed:0.38 green:0.39 blue:0.4 alpha:1] range:NSMakeRange(0, attributedString.length)];
+  
+  [attributedString addAttribute:NSParagraphStyleAttributeName value:paragraphStyle range:NSMakeRange(0, attributedString.length)];
+  
+    self.conversationTitleLabel.attributedText = attributedString;
 }
 
 #pragma mark - Helpers
@@ -314,7 +365,7 @@ static CGFloat const ATLChevronIconViewRightPadding = 14.0f;
 {
     if (!lastMessage) return @"";
     if (!lastMessage.sentAt) return @"";
-    
+  
     if (ATLIsDateInToday(lastMessage.receivedAt)) {
         return [ATLShortTimeFormatter() stringFromDate:lastMessage.receivedAt];
     } else {
@@ -329,19 +380,25 @@ static CGFloat const ATLChevronIconViewRightPadding = 14.0f;
     [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.conversationImageView attribute:NSLayoutAttributeLeft relatedBy:NSLayoutRelationEqual toItem:self.contentView attribute:NSLayoutAttributeLeft multiplier:1.0 constant:10]];
     [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.conversationImageView attribute:NSLayoutAttributeCenterY relatedBy:NSLayoutRelationEqual toItem:self.contentView attribute:NSLayoutAttributeCenterY multiplier:1.0 constant:0]];
 }
-
+- (void)configurerecepientLabelLayoutContraints
+{
+  self.conversationTitleLabelWithImageLeftConstraint = [NSLayoutConstraint constraintWithItem:self.recepientTitleLabel attribute:NSLayoutAttributeLeft relatedBy:NSLayoutRelationEqual toItem:self.conversationImageView attribute:NSLayoutAttributeRight multiplier:1.0 constant:10];
+  self.conversationTitleLabelWithoutImageLeftConstraint = [NSLayoutConstraint constraintWithItem:self.recepientTitleLabel attribute:NSLayoutAttributeLeft relatedBy:NSLayoutRelationEqual toItem:self.contentView attribute:NSLayoutAttributeLeft multiplier:1.0 constant:30];
+  [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.recepientTitleLabel attribute:NSLayoutAttributeRight relatedBy:NSLayoutRelationEqual toItem:self.dateLabel attribute:NSLayoutAttributeLeft multiplier:1.0 constant:-ATLConversationTitleLabelRightPadding]];
+  [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.recepientTitleLabel attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem:self.contentView attribute:NSLayoutAttributeTop multiplier:1.0 constant:ATLConversationLabelTopPadding*3]];
+}
 - (void)configureconversationTitleLabelLayoutContraints
 {
     self.conversationTitleLabelWithImageLeftConstraint = [NSLayoutConstraint constraintWithItem:self.conversationTitleLabel attribute:NSLayoutAttributeLeft relatedBy:NSLayoutRelationEqual toItem:self.conversationImageView attribute:NSLayoutAttributeRight multiplier:1.0 constant:10];
     self.conversationTitleLabelWithoutImageLeftConstraint = [NSLayoutConstraint constraintWithItem:self.conversationTitleLabel attribute:NSLayoutAttributeLeft relatedBy:NSLayoutRelationEqual toItem:self.contentView attribute:NSLayoutAttributeLeft multiplier:1.0 constant:30];
     [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.conversationTitleLabel attribute:NSLayoutAttributeRight relatedBy:NSLayoutRelationEqual toItem:self.dateLabel attribute:NSLayoutAttributeLeft multiplier:1.0 constant:-ATLConversationTitleLabelRightPadding]];
-    [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.conversationTitleLabel attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem:self.contentView attribute:NSLayoutAttributeTop multiplier:1.0 constant:ATLConversationLabelTopPadding]];
+    [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.conversationTitleLabel attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem:self.contentView attribute:NSLayoutAttributeTop multiplier:1.0 constant:ATLConversationLabelTopPadding*3]];
 }
 
 - (void)configureDateLabelLayoutContstraints
 {
     [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.dateLabel attribute:NSLayoutAttributeRight relatedBy:NSLayoutRelationEqual toItem:self.contentView attribute:NSLayoutAttributeRight multiplier:1.0 constant:-ATLDateLabelRightPadding]];
-    [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.dateLabel attribute:NSLayoutAttributeCenterY relatedBy:NSLayoutRelationEqual toItem:self.conversationTitleLabel attribute:NSLayoutAttributeCenterY multiplier:1.0 constant:0.0f]];
+    [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.dateLabel attribute:NSLayoutAttributeCenterY relatedBy:NSLayoutRelationEqual toItem:self.conversationTitleLabel attribute:NSLayoutAttributeCenterY multiplier:1.0 constant:1.0f]];
     // We want the conversation label to compress if needed instead of the date label.
     [self.dateLabel setContentCompressionResistancePriority:UILayoutPriorityDefaultHigh + 1 forAxis:UILayoutConstraintAxisHorizontal];
 }
@@ -349,8 +406,12 @@ static CGFloat const ATLChevronIconViewRightPadding = 14.0f;
 - (void)configureLastMessageLayoutConstraints
 {
     [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.lastMessageLabel attribute:NSLayoutAttributeLeft relatedBy:NSLayoutRelationEqual toItem:self.conversationTitleLabel attribute:NSLayoutAttributeLeft multiplier:1.0 constant:0]];
-    [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.lastMessageLabel attribute:NSLayoutAttributeRight relatedBy:NSLayoutRelationEqual toItem:self.contentView attribute:NSLayoutAttributeRight multiplier:1.0 constant:-ATLLastMessageLabelRightPadding]];
-    [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.lastMessageLabel attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem:self.conversationTitleLabel attribute:NSLayoutAttributeBottom multiplier:1.0 constant:0]];
+  
+    [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.lastMessageLabel attribute:NSLayoutAttributeRight relatedBy:NSLayoutRelationEqual toItem:self.contentView attribute:NSLayoutAttributeRight multiplier:1.0
+                                                                  constant:-ATLLastMessageLabelRightPadding]];
+  
+    [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.lastMessageLabel attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem:self.conversationTitleLabel attribute:NSLayoutAttributeBottom multiplier:1.0 constant:-2]];
+  
     [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.lastMessageLabel attribute:NSLayoutAttributeBottom relatedBy:NSLayoutRelationLessThanOrEqual toItem:self.contentView attribute:NSLayoutAttributeBottom multiplier:1.0 constant:-8]];
 }
 
